@@ -1,4 +1,2 @@
-streamlit
-pandas
-sqlalchemy
-pymysql
+mysql-connector-python==9.1.0
+streamlit==1.23.0  # Replace with the version you're using
