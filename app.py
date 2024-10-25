@@ -6,7 +6,7 @@ from datetime import datetime
 # MySQL Database Connection Parameters
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = ''  # Empty password as per XAMPP config
-MYSQL_HOST = 'localhost'
+MYSQL_HOST = '127.0.0.1'  # Use IP address instead of localhost
 MYSQL_PORT = 3306
 MYSQL_DB = 'delivergatedb'
 
