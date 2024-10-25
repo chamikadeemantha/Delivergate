@@ -14,9 +14,10 @@ MYSQL_DB = 'delivergatedb'
 db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
 engine = create_engine(db_connection_str)
 
-# Load data from the MySQL database
-customers_df = pd.read_sql('SELECT * FROM customers', con=engine)
-orders_df = pd.read_sql('SELECT * FROM orders', con=engine)
+# Load data from the MySQL database using a connection
+with engine.connect() as connection:
+    customers_df = pd.read_sql('SELECT * FROM customers', con=connection)
+    orders_df = pd.read_sql('SELECT * FROM orders', con=connection)
 
 # Merge DataFrames for analysis
 merged_df = pd.merge(orders_df, customers_df, on='customer_id')
