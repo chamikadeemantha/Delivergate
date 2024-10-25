@@ -1,4 +1,3 @@
-# Import required libraries
 import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
@@ -39,7 +38,6 @@ if not orders_df.empty:
     min_date = orders_df['order_date'].min()
     max_date = orders_df['order_date'].max()
     date_range = st.sidebar.date_input('Order Date Range', [min_date, max_date])
-
     # Filter orders based on the selected date range
     filtered_orders = orders_df[(orders_df['order_date'] >= pd.to_datetime(date_range[0])) & 
                                 (orders_df['order_date'] <= pd.to_datetime(date_range[1]))]
@@ -74,7 +72,6 @@ st.dataframe(final_filtered_orders)
 if not total_spent.empty:
     st.write("### Top 10 Customers by Total Revenue")
     top_customers = total_spent.sort_values(by='total_amount', ascending=False).head(10)
-
     fig, ax = plt.subplots()
     ax.barh(top_customers['customer_id'].astype(str), top_customers['total_amount'])
     ax.set_xlabel('Total Revenue')
@@ -86,7 +83,6 @@ if not filtered_orders.empty:
     st.write("### Total Revenue Over Time")
     filtered_orders['order_date'] = pd.to_datetime(filtered_orders['order_date'])
     revenue_over_time = filtered_orders.resample('M', on='order_date')['total_amount'].sum()
-
     fig, ax = plt.subplots()
     ax.plot(revenue_over_time.index, revenue_over_time.values)
     ax.set_xlabel('Order Date')
@@ -99,7 +95,6 @@ if not final_filtered_orders.empty:
     total_revenue = final_filtered_orders['total_amount'].sum()
     unique_customers = final_filtered_orders['customer_id'].nunique()
     total_orders = final_filtered_orders['order_id'].nunique()
-
     st.metric("Total Revenue", f"${total_revenue:,.2f}")
     st.metric("Unique Customers", unique_customers)
     st.metric("Total Orders", total_orders)
