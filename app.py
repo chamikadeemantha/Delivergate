@@ -10,7 +10,8 @@ engine = create_engine(db_connection_str)
 @st.cache_data(ttl=600)  # Cache data for 10 minutes
 def load_data():
     query = "SELECT * FROM orders"
-    df = pd.read_sql(query, engine)
+    # Pass the SQLAlchemy engine directly to pandas
+    df = pd.read_sql(query, con=engine)
     return df
 
 # Fetch and display the data
