@@ -11,23 +11,11 @@ MYSQL_HOST = '127.0.0.1'  # Use 127.0.0.1 instead of localhost
 MYSQL_PORT = 3306
 MYSQL_DB = 'delivergatedb'
 
-# Create a connection string and engine with connection pool settings
+# Create a connection string and engine
 db_connection_str = f'mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
 engine = create_engine(db_connection_str, pool_size=5, max_overflow=2)
 
-# Verify direct MySQL connection using mysql-connector-python
-try:
-    conn = mysql.connector.connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD, database=MYSQL_DB)
-    cursor = conn.cursor()
-    cursor.execute("SELECT VERSION()")
-    data = cursor.fetchone()
-    print("Database version:", data)
-    conn.close()
-    st.success("Successfully connected to the database!")
-except mysql.connector.Error as e:
-    st.error(f"Direct connection failed: {e}")
-
-# Load data with error handling and cache
+# Load data with caching for better performance
 @st.cache_data
 def load_data():
     try:
@@ -38,7 +26,7 @@ def load_data():
         return customers_df, orders_df
     except Exception as e:
         st.error(f"Error loading data: {e}")
-        return pd.DataFrame(), pd.DataFrame()  # Return empty DataFrames if connection fails
+        return pd.DataFrame(), pd.DataFrame()
 
 # Load data
 customers_df, orders_df = load_data()
@@ -46,13 +34,13 @@ customers_df, orders_df = load_data()
 # Sidebar Filters
 st.sidebar.header('Filters')
 
-# Date range filter
+# Date range filter for orders
 if not orders_df.empty:
+    orders_df['order_date'] = pd.to_datetime(orders_df['order_date'])
     min_date = orders_df['order_date'].min()
     max_date = orders_df['order_date'].max()
     date_range = st.sidebar.date_input('Order Date Range', [min_date, max_date])
-    # Filter orders based on the selected date range
-    filtered_orders = orders_df[(orders_df['order_date'] >= pd.to_datetime(date_range[0])) & 
+    filtered_orders = orders_df[(orders_df['order_date'] >= pd.to_datetime(date_range[0])) &
                                 (orders_df['order_date'] <= pd.to_datetime(date_range[1]))]
 else:
     st.warning("Orders data could not be loaded.")
@@ -70,7 +58,7 @@ if not filtered_orders.empty:
     customer_order_filter = st.sidebar.selectbox('Customers with more than X orders', [1, 5, 10])
     filtered_order_count = order_count[order_count['num_orders'] > customer_order_filter]
 
-    # Merge filtered data
+    # Merge filtered data to get the final set of customers and orders
     filtered_customers = pd.merge(filtered_customers, filtered_order_count, on='customer_id')
     final_filtered_orders = filtered_orders[filtered_orders['customer_id'].isin(filtered_customers['customer_id'])]
 else:
@@ -94,7 +82,6 @@ if not total_spent.empty:
 # Line chart for total revenue over time
 if not filtered_orders.empty:
     st.write("### Total Revenue Over Time")
-    filtered_orders['order_date'] = pd.to_datetime(filtered_orders['order_date'])
     revenue_over_time = filtered_orders.resample('M', on='order_date')['total_amount'].sum()
     fig, ax = plt.subplots()
     ax.plot(revenue_over_time.index, revenue_over_time.values)
