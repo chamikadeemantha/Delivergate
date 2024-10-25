@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pymysql
 import matplotlib.pyplot as plt
 
@@ -16,7 +16,7 @@ db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}
 engine = create_engine(db_connection_str)
 
 # Load data from the MySQL database
-@st.cache
+@st.cache_data
 def load_data():
     customers_df = pd.read_sql('SELECT * FROM customers', engine)
     orders_df = pd.read_sql('SELECT * FROM orders', engine)
@@ -28,8 +28,8 @@ customers_df, orders_df = load_data()
 st.sidebar.header("Filters")
 
 # Date range filter
-min_date = orders_df['order_date'].min()
-max_date = orders_df['order_date'].max()
+min_date = pd.to_datetime(orders_df['order_date']).min()
+max_date = pd.to_datetime(orders_df['order_date']).max()
 date_range = st.sidebar.date_input("Select date range", [min_date, max_date])
 
 # Filter by total amount spent
@@ -45,8 +45,8 @@ order_count = st.sidebar.selectbox("Filter by number of orders",
 
 # Apply filters
 filtered_orders = orders_df[
-    (orders_df['order_date'] >= pd.to_datetime(date_range[0])) &
-    (orders_df['order_date'] <= pd.to_datetime(date_range[1])) &
+    (pd.to_datetime(orders_df['order_date']) >= pd.to_datetime(date_range[0])) &
+    (pd.to_datetime(orders_df['order_date']) <= pd.to_datetime(date_range[1])) &
     (orders_df['total_amount'] >= amount_spent)
 ]
 
@@ -69,7 +69,7 @@ st.bar_chart(top_customers['total_amount'])
 # Line Chart: Total revenue over time (grouped by week or month)
 st.subheader("Revenue Over Time")
 filtered_orders['order_date'] = pd.to_datetime(filtered_orders['order_date'])
-revenue_over_time = filtered_orders.resample('W', on='order_date').sum()
+revenue_over_time = filtered_orders.resample('W', on='order_date').sum()  # Grouped by week
 st.line_chart(revenue_over_time['total_amount'])
 
 # Summary Section
