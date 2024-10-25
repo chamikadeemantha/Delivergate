@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
+import pymysql
 
 # MySQL Database Connection Parameters
 MYSQL_USER = 'root'
@@ -12,15 +13,21 @@ MYSQL_DB = 'delivergatedb'
 
 # Create a connection string and engine with connection pool settings
 db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
-engine = create_engine(db_connection_str, pool_size=5, max_overflow=2)
 
-# Verify the connection
+# Verify direct MySQL connection
 try:
-    conn = engine.connect()
+    conn = pymysql.connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD, db=MYSQL_DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT VERSION()")
+    data = cursor.fetchone()
+    print("Database version:", data)
     conn.close()
     st.success("Successfully connected to the database!")
-except Exception as e:
-    st.error(f"Connection failed: {e}")
+except pymysql.MySQLError as e:
+    st.error(f"Direct connection failed: {e}")
+
+# Create SQLAlchemy engine
+engine = create_engine(db_connection_str, pool_size=5, max_overflow=2)
 
 # Load data with error handling and cache
 @st.cache_data
@@ -30,8 +37,6 @@ def load_data():
         orders_query = "SELECT * FROM orders"
         customers_df = pd.read_sql(customers_query, con=engine)
         orders_df = pd.read_sql(orders_query, con=engine)
-        print(f"Customers DataFrame:\n{customers_df.head()}")
-        print(f"Orders DataFrame:\n{orders_df.head()}")
         return customers_df, orders_df
     except Exception as e:
         st.error(f"Error loading data: {e}")
