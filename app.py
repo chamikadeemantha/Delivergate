@@ -1,48 +1,31 @@
 import streamlit as st
 import pandas as pd
-import mysql.connector
-from mysql.connector import Error
+from sqlalchemy import create_engine
+import pymysql
 
-# Function to establish MySQL connection
-def create_connection():
-    try:
-        conn = mysql.connector.connect(
-            host=st.secrets["mysql"]["host"],
-            user=st.secrets["mysql"]["username"],
-            password=st.secrets["mysql"]["password"],
-            database=st.secrets["mysql"]["database"],
-            port=st.secrets["mysql"]["port"]
-        )
-        if conn.is_connected():
-            st.write("Successfully connected to the database")
-        return conn
-    except Error as e:
-        st.error(f"Error: '{e}'")
-        return None
+# MySQL Database Connection Parameters
+MYSQL_USER = 'root'
+MYSQL_PASSWORD = ''  # Empty password as per XAMPP config
+MYSQL_HOST = 'localhost'
+MYSQL_PORT = 3306
+MYSQL_DB = 'delivergatedb'
 
-# Function to get data from the database
-def get_data(conn):
-    query = 'SELECT * FROM customers;'
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(query)
-    result = cursor.fetchall()
-    cursor.close()
-    return pd.DataFrame(result)
+# Create a connection string
+db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
+engine = create_engine(db_connection_str)
 
-# Main Streamlit app logic
-def main():
-    st.title('Customer Data Viewer')
+# Streamlit app
+st.title("Delivergate Pvt Ltd Database Viewer")
 
-    conn = create_connection()
-    if conn:
-        df = get_data(conn)
-        if not df.empty:
-            for row in df.itertuples():
-                st.write(f"{row.name} has a :{row.pet}:")
-        else:
-            st.write("No data found.")
-    else:
-        st.write("Could not establish a connection to the database.")
+# Function to load data from MySQL
+@st.cache_data(ttl=600)
+def load_data(table_name):
+    query = f"SELECT * FROM {table_name}"
+    with engine.connect() as connection:
+        df = pd.read_sql(query, connection)
+    return df
 
-if __name__ == "__main__":
-    main()
+# Display Customers table
+st.header("Customers Table")
+customers_df = load_data('customers')
+st.write(customers_df)
