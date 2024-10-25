@@ -15,9 +15,12 @@ db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}
 engine = create_engine(db_connection_str)
 
 # Load data from the MySQL database using a connection
-with engine.connect() as connection:
-    customers_df = pd.read_sql('SELECT * FROM customers', con=connection)
-    orders_df = pd.read_sql('SELECT * FROM orders', con=connection)
+try:
+    with engine.connect() as connection:
+        customers_df = pd.read_sql('SELECT * FROM customers', con=connection)
+        orders_df = pd.read_sql('SELECT * FROM orders', con=connection)
+except Exception as e:
+    st.error(f"Database connection error: {e}")
 
 # Merge DataFrames for analysis
 merged_df = pd.merge(orders_df, customers_df, on='customer_id')
