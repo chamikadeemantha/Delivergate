@@ -1,33 +1,31 @@
 import streamlit as st
 import pandas as pd
+import mysql.connector
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
-import pymysql
 
 # MySQL Database Connection Parameters
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = 'root'
-MYSQL_HOST = 'localhost'
+MYSQL_HOST = '127.0.0.1'  # Use 127.0.0.1 instead of localhost
 MYSQL_PORT = 3306
 MYSQL_DB = 'delivergatedb'
 
 # Create a connection string and engine with connection pool settings
-db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
+db_connection_str = f'mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
+engine = create_engine(db_connection_str, pool_size=5, max_overflow=2)
 
-# Verify direct MySQL connection
+# Verify direct MySQL connection using mysql-connector-python
 try:
-    conn = pymysql.connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD, db=MYSQL_DB)
+    conn = mysql.connector.connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD, database=MYSQL_DB)
     cursor = conn.cursor()
     cursor.execute("SELECT VERSION()")
     data = cursor.fetchone()
     print("Database version:", data)
     conn.close()
     st.success("Successfully connected to the database!")
-except pymysql.MySQLError as e:
+except mysql.connector.Error as e:
     st.error(f"Direct connection failed: {e}")
-
-# Create SQLAlchemy engine
-engine = create_engine(db_connection_str, pool_size=5, max_overflow=2)
 
 # Load data with error handling and cache
 @st.cache_data
