@@ -2,24 +2,25 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
 
-# Fetch MySQL credentials from Streamlit secrets
+# Retrieve MySQL credentials securely from Streamlit secrets
 db_connection_str = f"mysql+pymysql://{st.secrets['connections']['mysql']['username']}:{st.secrets['connections']['mysql']['password']}@{st.secrets['connections']['mysql']['host']}:{st.secrets['connections']['mysql']['port']}/{st.secrets['connections']['mysql']['database']}"
 engine = create_engine(db_connection_str)
 
-# Function to load data from the MySQL database
-@st.cache_data(ttl=600)  # Cache data for 10 minutes
+# Function to load data from MySQL database
+@st.cache_data(ttl=600)
 def load_data():
+    # Ensure pandas uses SQLAlchemy engine
     query = "SELECT * FROM orders"
-    # Pass the SQLAlchemy engine directly to pandas
-    df = pd.read_sql(query, con=engine)
+    with engine.connect() as connection:
+        df = pd.read_sql(query, con=connection)
     return df
 
-# Fetch and display the data
+# Use try-except to handle potential loading issues
 try:
     orders_df = load_data()
     st.success("Data loaded successfully!")
 
-    # Display the fetched data in a table
+    # Display data in a table
     st.write("Orders Data")
     st.dataframe(orders_df)
 
@@ -33,7 +34,7 @@ try:
     st.metric("Number of Unique Customers", unique_customers)
     st.metric("Total Orders", total_orders)
 
-    # Visualize top customers by revenue
+    # Bar chart for top 10 customers by revenue
     st.write("Top 10 Customers by Total Revenue")
     top_customers = orders_df.groupby('customer_id').sum().sort_values('total_amount', ascending=False).head(10)
     st.bar_chart(top_customers['total_amount'])
