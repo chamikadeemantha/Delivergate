@@ -1,13 +1,17 @@
 import streamlit as st
+import pandas as pd
+from sqlalchemy import create_engine
+import pymysql
 
 # Initialize connection using the connection details in secrets.toml
-conn = st.connection('mysql', type='sql')
+db_connection_str = f"mysql+pymysql://{st.secrets['connections']['mysql']['username']}:{st.secrets['connections']['mysql']['password']}@{st.secrets['connections']['mysql']['host']}:{st.secrets['connections']['mysql']['port']}/{st.secrets['connections']['mysql']['database']}"
+engine = create_engine(db_connection_str)
 
-# Load data from the orders table
+# Load data from the MySQL database
 @st.cache_data(ttl=600)  # Cache the result for 10 minutes
 def load_data():
     query = "SELECT * FROM orders;"
-    df = conn.query(query)
+    df = pd.read_sql(query, engine)
     return df
 
 # Get the data
@@ -17,8 +21,8 @@ orders_df = load_data()
 st.sidebar.header("Filters")
 
 # Date range filter
-min_date = orders_df['order_date'].min()
-max_date = orders_df['order_date'].max()
+min_date = pd.to_datetime(orders_df['order_date']).min()
+max_date = pd.to_datetime(orders_df['order_date']).max()
 date_range = st.sidebar.date_input("Select date range", [min_date, max_date])
 
 # Filter by total amount spent
