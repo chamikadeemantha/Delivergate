@@ -14,18 +14,19 @@ MYSQL_DB = 'delivergatedb'
 db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
 engine = create_engine(db_connection_str)
 
-# Streamlit app
-st.title("Delivergate Pvt Ltd Database Viewer")
+# Streamlit App
+st.title("Customer Table Display")
 
-# Function to load data from MySQL
-@st.cache_data(ttl=600)
-def load_data(table_name):
-    query = f"SELECT * FROM {table_name}"
-    with engine.connect() as connection:
-        df = pd.read_sql(query, connection)
+def load_customer_data():
+    # Query the customers table
+    query = "SELECT * FROM customers"
+    # Load the data into a DataFrame
+    df = pd.read_sql(query, con=engine)
     return df
 
-# Display Customers table
-st.header("Customers Table")
-customers_df = load_data('customers')
+# Display the customers table in Streamlit
+st.subheader("Customers Data")
+customers_df = load_customer_data()
 st.write(customers_df)
+
+st.success("Customer data loaded successfully!")
