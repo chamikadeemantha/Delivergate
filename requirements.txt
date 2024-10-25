@@ -3,3 +3,4 @@ sqlalchemy
 pymysql
 pandas
 matplotlib
+mysql-connector-python
