@@ -6,7 +6,7 @@ import pymysql
 # MySQL Database Connection Parameters
 MYSQL_USER = 'root'
 MYSQL_PASSWORD = ''  # Empty password as per XAMPP config
-MYSQL_HOST = 'localhost'  # Or the public IP if the database is hosted remotely
+MYSQL_HOST = '127.0.0.1'  # Or the public IP if the database is hosted remotely
 MYSQL_PORT = 3306
 MYSQL_DB = 'delivergatedb'
 
