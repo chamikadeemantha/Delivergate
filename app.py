@@ -18,10 +18,11 @@ engine = create_engine(db_connection_str)
 st.title("Delivergate Pvt Ltd Database Viewer")
 
 # Function to load data from MySQL
-@st.cache_data
+@st.cache_data(ttl=600)
 def load_data(table_name):
     query = f"SELECT * FROM {table_name}"
-    df = pd.read_sql(query, engine)
+    with engine.connect() as connection:
+        df = pd.read_sql(query, connection)
     return df
 
 # Display Customers table
@@ -33,5 +34,3 @@ st.write(customers_df)
 st.header("Orders Table")
 orders_df = load_data('orders')
 st.write(orders_df)
-
-# Add more features to your app as needed
