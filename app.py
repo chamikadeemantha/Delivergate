@@ -14,6 +14,14 @@ MYSQL_DB = 'delivergatedb'
 db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
 engine = create_engine(db_connection_str, pool_size=5, max_overflow=2)
 
+# Verify the connection
+try:
+    conn = engine.connect()
+    conn.close()
+    st.success("Successfully connected to the database!")
+except Exception as e:
+    st.error(f"Connection failed: {e}")
+
 # Load data with error handling and cache
 @st.cache_data
 def load_data():
@@ -22,6 +30,8 @@ def load_data():
         orders_query = "SELECT * FROM orders"
         customers_df = pd.read_sql(customers_query, con=engine)
         orders_df = pd.read_sql(orders_query, con=engine)
+        print(f"Customers DataFrame:\n{customers_df.head()}")
+        print(f"Orders DataFrame:\n{orders_df.head()}")
         return customers_df, orders_df
     except Exception as e:
         st.error(f"Error loading data: {e}")
