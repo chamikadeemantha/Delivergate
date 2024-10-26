@@ -2,31 +2,26 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine
 
-# MySQL Database Connection Parameters
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = ''  # Replace with your password
-MYSQL_HOST = 'localhost'
-MYSQL_PORT = 3306
-MYSQL_DB = 'delivergatedb'
+# Use a simple connection string pointing to your MySQL database
+engine = create_engine('mysql+pymysql://root:@localhost:3306/delivergatedb')
 
-# Create a connection string
-db_connection_str = f'mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}'
-
-# Function to load data from the database
+@st.cache
 def load_data():
-    try:
-        engine = create_engine(db_connection_str)
-        orders_df = pd.read_sql("SELECT * FROM orders", con=engine)
-        customers_df = pd.read_sql("SELECT * FROM customers", con=engine)
-        return orders_df, customers_df
-    except Exception as e:
-        st.error(f"Error loading data from database: {e}")
-        return None, None
+    # Load the data from MySQL tables
+    customers_df = pd.read_sql('SELECT * FROM customers', con=engine)
+    orders_df = pd.read_sql('SELECT * FROM orders', con=engine)
+    return customers_df, orders_df
 
-# Load data
-orders_df, customers_df = load_data()
+customers_df, orders_df = load_data()
 
-if orders_df is not None and customers_df is not None:
-    # Proceed with your Streamlit app logic...
-    st.title("Order Dashboard")
-    st.subheader("Filtered Orders")
+# You can now proceed with any data processing and visualization as previously outlined
+st.header("Customer Orders Dashboard")
+
+# Example: Display the data
+st.subheader("Customers Data")
+st.dataframe(customers_df)
+
+st.subheader("Orders Data")
+st.dataframe(orders_df)
+
+# Further dashboard setup and analysis can be added here
